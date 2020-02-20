@@ -10,15 +10,15 @@ Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
 
   config.vm.define "consul-node-1" do |r1|
-    config.vm.network "public_network", ip: "192.168.1.201", bridge: "#$default_if"
+    r1.vm.network "public_network", ip: "192.168.1.201", bridge: "enp8s0"
   end
 
   config.vm.define "consul-node-2" do |r2|
-    config.vm.network "public_network", ip: "192.168.1.202", bridge: "#$default_if"
+    r2.vm.network "public_network", ip: "192.168.1.202", bridge: "enp8s0"
   end
 
   config.vm.define "consul-node-3" do |r3|
-    config.vm.network "public_network", ip: "192.168.1.203", bridge: "#$default_if"
+    r3.vm.network "public_network", ip: "192.168.1.203", bridge: "enp8s0"
   end
 
   # Provider-specific configuration so you can fine-tune various

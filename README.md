@@ -1,1 +1,1 @@
-# consul-cluster-vagrant-ansible
+# Consul Cluster with Vagrant and Ansible

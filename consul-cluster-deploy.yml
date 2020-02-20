@@ -1,0 +1,74 @@
+# This playbook requires extra vars consul_archive and encrypt_key
+- hosts: all
+  become: true
+  tasks:
+    - name: Unzip Consul binary
+      unarchive:
+        src: "{{ consul_archive | default('/tmp/consul.zip') }}"
+        dest: /usr/local/bin
+        remote_src: true
+
+    - name: Create some folders
+      file:
+        state: directory
+        path: "{{ item }}"
+      with_items:
+        - /etc/consul.d/scripts
+        - /var/consul
+
+    - name: Create config file
+      copy:
+        dest: /etc/consul.d/config.json
+        content: |
+                 {
+                  "bootstrap_expect": 3,
+                  "client_addr": "0.0.0.0",
+                  "datacenter": "cloud",
+                  "data_dir": "/var/consul",
+                  "domain": "consul",
+                  "enable_script_checks": true,
+                  "dns_config": {
+                    "enable_truncate": true,
+                    "only_passing": true
+                  },
+                   "enable_syslog": true,
+                  "encrypt": "{{ encrypt_key | default('qGt9Nwfsg3eKs5YuZcKXurrQt7Tg+YF0qeM9ABX9YyQ=') }}",
+                  "leave_on_terminate": true,
+                  "log_level": "INFO",
+                  "rejoin_after_leave": true,
+                  "server": true,
+                  "retry_join": ['192.168.1.201','192.168.1.202','192.168.1.203'],
+                  "retry_max": 15
+                  "ui": true
+                 }
+
+    - name: Create service configuration
+      copy:
+        dest: /etc/systemd/system/consul.service
+        content: |
+                 [Unit]
+                 Description=Consul Startup process
+                 After=network.target
+
+                 [Service]
+                 Type=simple
+                 ExecStart=/bin/bash -c '/usr/local/bin/consul agent -config-dir /etc/consul.d/ -bind {{ ansible_eth1.ipv4.address }}'
+                 TimeoutStartSec=0
+
+                 [Install]
+                 WantedBy=default.target
+
+    - name: Reload service definition
+      shell: systemctl daemon-reload
+
+    - name: Enable Docker
+      service:
+        name: consul
+        state: started
+        enabled: yes
+
+    - name: Check members
+      shell: /usr/local/bin/consul members
+      register: consul_output
+
+    - debug: var=consul_output verbosity=0

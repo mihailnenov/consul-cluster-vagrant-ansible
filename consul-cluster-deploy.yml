@@ -61,7 +61,7 @@
     - name: Reload service definition
       shell: systemctl daemon-reload
 
-    - name: Enable Docker
+    - name: Enable Consul service and start it
       service:
         name: consul
         state: started
